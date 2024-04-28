@@ -1,45 +1,36 @@
-import React from 'react';
-import logo from '../assets/logo.svg';
-import '../styles/ui.css';
+import React, { useState } from 'react';
 
 function App() {
-  const textbox = React.useRef<HTMLInputElement>(undefined);
+  const [isLoading, setIsLoading] = useState(false);
+  const [textLayers, setTextLayers] = useState([]);
 
-  const countRef = React.useCallback((element: HTMLInputElement) => {
-    if (element) element.value = '5';
-    textbox.current = element;
-  }, []);
-
-  const onCreate = () => {
-    const count = parseInt(textbox.current.value, 10);
-    parent.postMessage({ pluginMessage: { type: 'create-rectangles', count } }, '*');
+  const handleGetTextLayers = () => {
+    setIsLoading(true);
+    parent.postMessage({ pluginMessage: { type: 'getSelectedTextLayers' } }, '*');
   };
 
-  const onCancel = () => {
-    parent.postMessage({ pluginMessage: { type: 'cancel' } }, '*');
+  const handleTextLayers = event => {
+    if (event.data.pluginMessage.type === 'textStyles') {
+      setTextLayers(event.data.pluginMessage.data);
+      setIsLoading(false);
+    }
   };
 
-  React.useEffect(() => {
-    // This is how we read messages sent from the plugin controller
-    window.onmessage = (event) => {
-      const { type, message } = event.data.pluginMessage;
-      if (type === 'create-rectangles') {
-        console.log(`Figma Says: ${message}`);
-      }
-    };
-  }, []);
+  window.onmessage = handleTextLayers;
 
   return (
     <div>
-      <img src={logo} />
-      <h2>Rectangle Creator</h2>
-      <p>
-        Count: <input ref={countRef} />
-      </p>
-      <button id="create" onClick={onCreate}>
-        Create
-      </button>
-      <button onClick={onCancel}>Cancel</button>
+      <button onClick={handleGetTextLayers}>Get Text Layers</button>
+      {isLoading ? (
+        <p>Loading...</p>
+      ) : (
+        textLayers.map(layer => (
+          <div key={layer.style.id}>
+            <p>{layer.style.fontFamily} {layer.style.fontWeight} - {layer.style.fontSize}/{layer.style.lineHeight}</p>
+            {/* <p>Text: {layer.text}</p> */}
+          </div>
+        ))
+      )}
     </div>
   );
 }
