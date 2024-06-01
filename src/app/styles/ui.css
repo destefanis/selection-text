@@ -1,37 +1,215 @@
-body {
-  font: 12px sans-serif;
+.wrapper {
+  padding: 8px 0 16px;
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 11px;
+}
+
+.section-label {
+  height: 32px;
+  margin-left: 16px;
+  /* Pos – UI 11 Bold */
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-size: 11px;
+  line-height: 16px;
+  /* identical to box height, or 145% */
+  display: flex;
+  align-items: center;
+  letter-spacing: 0.005em;
+  color: rgba(0, 0, 0, 0.9);
+}
+
+.list-item {
+  height: 32px;
+  display: flex;
+  flex-flow: row;
+  justify-content: flex-start;
+  align-content: center;
+  align-items: center;
+  padding-left: 16px;
+  padding-right: 8px;
+  border: 1px solid transparent;
+  box-sizing: content-box;
+}
+
+.label {
+  /* Legacy/Pos – UI 11 */
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 11px;
+  line-height: 16px;
+  letter-spacing: 0.005em;
+  color: rgba(0, 0, 0, 0.9);
+}
+
+.secondary {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 11px;
+  line-height: 16px;
+  letter-spacing: 0.005em;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.style-indicator-wrapper {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
   text-align: center;
-  margin: 20px;
 }
-button {
-  border-radius: 5px;
-  background: white;
-  color: black;
-  border: none;
-  padding: 8px 15px;
-  margin: 0 5px;
-  box-shadow: inset 0 0 0 1px black;
-  outline: none;
+
+.style-name {
+  /* Legacy/Pos – UI 11 */
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 11px;
+  line-height: 16px;
+  /* or 145% */
+  display: flex;
+  align-items: center;
+  letter-spacing: 0.005em;
+  color: rgba(0, 0, 0, 0.9);
 }
-#create {
-  box-shadow: none;
-  background: #18a0fb;
-  color: white;
+
+/* Css Reset */
+/* http://meyerweb.com/eric/tools/css/reset/ 
+   v2.0 | 20110126
+   License: none (public domain)
+*/
+
+html,
+body,
+div,
+span,
+applet,
+object,
+iframe,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+blockquote,
+pre,
+a,
+abbr,
+acronym,
+address,
+big,
+cite,
+code,
+del,
+dfn,
+em,
+img,
+ins,
+kbd,
+q,
+s,
+samp,
+small,
+strike,
+strong,
+sub,
+sup,
+tt,
+var,
+b,
+u,
+i,
+center,
+dl,
+dt,
+dd,
+ol,
+ul,
+li,
+fieldset,
+form,
+label,
+legend,
+table,
+caption,
+tbody,
+tfoot,
+thead,
+tr,
+th,
+td,
+article,
+aside,
+canvas,
+details,
+embed,
+figure,
+figcaption,
+footer,
+header,
+hgroup,
+menu,
+nav,
+output,
+ruby,
+section,
+summary,
+time,
+mark,
+audio,
+video {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 100%;
+  font: inherit;
+  vertical-align: baseline;
 }
-input {
-  border: none;
-  outline: none;
-  padding: 8px;
+
+/* HTML5 display-role reset for older browsers */
+article,
+aside,
+details,
+figcaption,
+figure,
+footer,
+header,
+hgroup,
+menu,
+nav,
+section {
+  display: block;
 }
-input:hover {
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+
+body {
+  line-height: 1;
 }
-button:focus {
-  box-shadow: inset 0 0 0 2px #18a0fb;
+
+ol,
+ul {
+  list-style: none;
 }
-#create:focus {
-  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.3);
+
+blockquote,
+q {
+  quotes: none;
 }
-input:focus {
-  box-shadow: inset 0 0 0 2px #18a0fb;
+
+blockquote:before,
+blockquote:after,
+q:before,
+q:after {
+  content: '';
+  content: none;
+}
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
 }
