@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
+import styleIcon from '../assets/style.svg';
+import selectIcon from '../assets/select.svg';
+import refreshIcon from '../assets/refresh.svg';
 import '../styles/ui.css'
 
 function App() {
+  const [layersSelected, setLayersSelected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [textLayers, setTextLayers] = useState([]);
   const [localTextStyles, setLocalTextStyles] = useState([]);
@@ -11,13 +15,19 @@ function App() {
   };
 
   const handleGetTextLayers = () => {
-    setIsLoading(true);
+    // setIsLoading(true);
     parent.postMessage({ pluginMessage: { type: 'getSelectedTextLayers' } }, '*');
+  };
+
+  // User has clicked a select all icon
+  const handleSelectClick = (ids) => {
+    parent.postMessage({ pluginMessage: { type: 'selectNodes', nodeArray: ids } }, '*');
   };
 
   React.useEffect(() => {
     // Find the local text styles from Figma
     getLocalTextStyles();
+    handleGetTextLayers();
 
     window.onmessage = event => {
 
@@ -29,6 +39,8 @@ function App() {
       // we can update our UI.
       if (event.data.pluginMessage.type === 'returnTextLayers') {
         setTextLayers(event.data.pluginMessage.data);
+        console.log(event.data.pluginMessage.data);
+        setLayersSelected(true);
         setIsLoading(false);
       }
     };
@@ -38,31 +50,53 @@ function App() {
     <div className="wrapper">
       {isLoading ? (
         <p>Loading...</p>
-      ) : (
+      ) : setLayersSelected ? (
         <React.Fragment>
+          <div className="section-header">
           <h3 className="section-label">Selection Text</h3>
+          <img src={refreshIcon} alt="Refresh Icon" className="icon refresh-icon" onClick={() => handleGetTextLayers()}/>
+          </div>
+          
           <ul className="list">
             {textLayers.map(layer => (
               <li className="list-item" key={layer.style.id}>
                 {layer.style.hasStyle ? (
-                  <div>
+                  <div className="list-item-content">
                     <span className="style-indicator-wrapper">
-                      <span className="style-indicator" style={{ fontFamily: layer.style.fontFamily, fontWeight: layer.style.fontWeight, fontSize: Math.min(13, layer.style.fontSize) + 'px' }}>
+                      <span className="style-indicator" style={{ fontFamily: layer.style.fontFamily, fontWeight: layer.style.fontWeight, fontSize: Math.min(12, layer.style.fontSize) + 'px' }}>
                         Ag
                       </span>
                     </span>
-                    <span style={{ marginLeft: '8px' }}>
-                      <span className="label">{layer.style.name}</span><span className="secondary"> · {layer.style.fontSize}/{layer.style.lineHeight}</span>
-                    </span>
+                    
+                      <span className="label">{layer.style.name}</span><span className="secondary"><span className="dot">·</span>{layer.style.fontSize}/{layer.style.lineHeight}</span>
+                    
                   </div>
                 ) : (
-                  <span><span className="label">{layer.style.fontFamily} {layer.style.fontWeight}</span><span className="secondary"> · {layer.style.fontSize}/{layer.style.lineHeight}</span></span>
+                  <div className="list-item-content">
+                    <span className="label">{layer.style.fontFamily} {layer.style.fontWeight}</span><span className="secondary"><span className="dot">·</span> {layer.style.fontSize}/{layer.style.lineHeight}</span>
+                  </div>
                 )}
+                <div className="icons">
+                  {layer.style.hasStyle ? (
+                    <img src={selectIcon} alt="Select Icon" className="icon" onClick={() => handleSelectClick(layer.ids)} />
+                  ) : (
+                    <>
+                      <img src={styleIcon} alt="Style Icon" className="icon" />
+                      <img src={selectIcon} alt="Select Icon" className="icon" onClick={() => handleSelectClick(layer.ids)} />
+                    </>
+                  )}
+                </div>
               </li>
             ))}
           </ul>
-          <button onClick={handleGetTextLayers}>Get Text Layers</button>
+          
         </React.Fragment>
+      ) : (
+        // Display the welcome screen if no layers are selected
+        <div className="welcome-screen">
+          <h3>Welcome to the Plugin!</h3>
+          <div className="secondary-button" onClick={handleGetTextLayers}>Get Text Layers</div>
+        </div>
       )}
     </div>
   );

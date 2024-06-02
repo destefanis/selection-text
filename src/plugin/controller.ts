@@ -20,8 +20,10 @@ figma.ui.onmessage = async (msg) => {
         fontWeight: style.fontName.style,
         description: style.description || "No description", // Handle potentially undefined properties
         fontSize: style.fontSize || "Variable", // Handle cases where fontSize might not be uniformly set
-        lineHeight: style.lineHeight ? (style.lineHeight.unit === 'PIXELS' ? style.lineHeight.value : style.lineHeight.unit) : 'AUTO',
+        // lineHeight: style.lineHeight ? (style.lineHeight.unit === 'PIXELS' ? style.lineHeight.value : style.lineHeight.unit) : 'AUTO',
+        lineHeight: style.lineHeight,
         letterSpacing: style.letterSpacing ? (style.letterSpacing.unit === 'PIXELS' ? style.letterSpacing.value : style.letterSpacing.unit) : 'NORMAL',
+        // letterSpacing: style.letterSpacing,
         paragraphSpacing: style.paragraphSpacing || 0,
         textCase: style.textCase || 'ORIGINAL',
         textDecoration: style.textDecoration || 'NONE',
@@ -61,7 +63,7 @@ figma.ui.onmessage = async (msg) => {
               fontFamily: node.fontName.family,
               fontWeight: node.fontName.style,
               fontSize: node.fontSize,
-              lineHeight: (node.lineHeight && node.lineHeight.value) || "auto",
+              lineHeight: (node.lineHeight && node.lineHeight.value) || "Auto",
               letterSpacing: node.letterSpacing,
               paragraphSpacing: node.paragraphSpacing,
               textAlign: node.textAlignHorizontal,
@@ -105,32 +107,18 @@ figma.ui.onmessage = async (msg) => {
       // Start processing
       await processTextLayers();
 
+      // Format the line height depending if it's a percentage, pixels, or set to auto.
       function formatLineHeight(lineHeight) {
-
-        // if (lineHeight.unit === "AUTO") {
-        //   return 'Auto'
-        // } else {
-        //   return Math.floor(lineHeight.value * 10) / 10;
-        // }
-
-        // Check if lineHeight is an object and handle accordingly
-        if (typeof lineHeight === 'object' && lineHeight !== null) {
-          if (lineHeight.unit === 'PERCENT') {
-            console.log(lineHeight);
-            // If lineHeight is a percentage
-            return lineHeight.value;
-          } else if (lineHeight.unit === 'PIXELS') {
-            // If lineHeight is specified in pixels, round to one decimal place
-            return Math.floor(lineHeight.value * 10) / 10;
-          }
-        } else if (typeof lineHeight === 'number') {
-          // If lineHeight is directly a number (not common in recent API versions)
-          return Math.floor(lineHeight * 10) / 10;
+        if (lineHeight.unit === "AUTO") {
+          return 'Auto';
+        } else if (lineHeight.unit === 'PIXELS') {
+          return `${Math.floor(lineHeight.value * 10) / 10}`; // Ensure to append 'px' for clarity
+        } else if (lineHeight.unit === "PERCENT") {
+          return `${Math.floor(lineHeight.value)}`; // Remove decimals from percentage
+        } else {
+          return 'Auto';
         }
-        // Default case when lineHeight is 'AUTO' or undefined
-        return 'Auto';
       }
-
 
       // Group text layers by style and send to UI
       function groupAndSendData(textLayers) {
@@ -139,11 +127,10 @@ figma.ui.onmessage = async (msg) => {
           let styleInfo;
           let styleKey;
 
-          console.log(layer.lineHeight)
-
           // Check if layer has a textStyleId and find the matching local style
           if (layer.textStyleId) {
             const matchedStyle = localTextStyles.find(style => style.id === layer.textStyleId);
+
             if (matchedStyle) {
               // Use the style's ID as the key and add more style info
               styleKey = layer.textStyleId;
@@ -204,5 +191,19 @@ figma.ui.onmessage = async (msg) => {
     } else {
       figma.notify("Please select at least one layer.");
     }
+  }
+
+  if (msg.type === "selectNodes") {
+    const layerArray = msg.nodeArray;
+    let nodesToBeSelected = [];
+
+    layerArray.forEach(item => {
+      let layer = figma.getNodeById(item);
+      // Using selection and viewport requires an array.
+      nodesToBeSelected.push(layer);
+    });
+
+    // Select the nodes
+    figma.currentPage.selection = nodesToBeSelected;
   }
 };

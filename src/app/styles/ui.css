@@ -6,17 +6,26 @@
   font-size: 11px;
 }
 
+.section-header {
+  display: flex;
+  flex-flow: row;
+  padding-right: 4px;
+}
+
+.refresh-icon {
+  align-self: flex-end;
+}
+
 .section-label {
+  display: flex;
+  flex-grow: 1;
   height: 32px;
   margin-left: 16px;
-  /* Pos – UI 11 Bold */
   font-family: 'Inter';
   font-style: normal;
   font-weight: 600;
   font-size: 11px;
   line-height: 16px;
-  /* identical to box height, or 145% */
-  display: flex;
   align-items: center;
   letter-spacing: 0.005em;
   color: rgba(0, 0, 0, 0.9);
@@ -26,14 +35,50 @@
   height: 32px;
   display: flex;
   flex-flow: row;
-  justify-content: flex-start;
+  justify-content: space-between;
   align-content: center;
   align-items: center;
-  padding-left: 16px;
-  padding-right: 8px;
+  padding-left: 8px;
+  padding-right: 4px;
   border: 1px solid transparent;
   box-sizing: content-box;
+  overflow: hidden;
 }
+
+.list-item-content:hover {
+  background-color: #f5f5f5;
+}
+
+.list-item:hover .icons {
+  display: flex;
+}
+
+.list-item-content {
+  height: 32px;
+  padding-left: 8px;
+  padding-right: 10px;
+  border-radius: 3px;
+  display: flex;
+  flex-grow: 1;
+  flex-flow: row;
+  align-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.icons {
+  display: none;
+  flex-shrink: 0;
+}
+
+.icon {
+  border-radius: 3px;
+}
+
+.icon:hover {
+  background-color: #f5f5f5;
+}
+
 
 .label {
   /* Legacy/Pos – UI 11 */
@@ -44,6 +89,9 @@
   line-height: 16px;
   letter-spacing: 0.005em;
   color: rgba(0, 0, 0, 0.9);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .secondary {
@@ -54,13 +102,24 @@
   line-height: 16px;
   letter-spacing: 0.005em;
   color: rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
+  /* padding-left: 4px; */
+}
+
+.dot {
+  padding-left: 3px;
+  padding-right: 3px;
 }
 
 .style-indicator-wrapper {
-  display: inline-block;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
   width: 16px;
   height: 16px;
   text-align: center;
+  /* white-space: nowrap; */
+  padding-right: 8px;
 }
 
 .style-name {
@@ -75,6 +134,25 @@
   align-items: center;
   letter-spacing: 0.005em;
   color: rgba(0, 0, 0, 0.9);
+}
+
+.secondary-button {
+  height: 30px;
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-size: 11px;
+  line-height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  letter-spacing: 0.005em;
+  color: rgba(0, 0, 0, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.9);
+  margin: 8px 16px 16px;
+  text-align: center;
+  border-radius: 5px;
 }
 
 /* Css Reset */
