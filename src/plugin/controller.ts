@@ -3,6 +3,14 @@ figma.skipInvisibleInstanceChildren = true;
 
 let localTextStyles = {};
 
+figma.on("selectionchange", _event => {
+  // When a change happens in the document
+  // send a message to the plugin to look for changes.
+  figma.ui.postMessage({
+    type: "change"
+  });
+});
+
 figma.ui.onmessage = async (msg) => {
 
   // Called immediately by the App to fetch local styles.
@@ -190,6 +198,7 @@ figma.ui.onmessage = async (msg) => {
 
     } else {
       figma.notify("Please select at least one layer.");
+      figma.ui.postMessage({ type: 'noLayerSelected' });
     }
   }
 

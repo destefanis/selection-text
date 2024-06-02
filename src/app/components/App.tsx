@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import styleIcon from '../assets/style.svg';
 import selectIcon from '../assets/select.svg';
 import refreshIcon from '../assets/refresh.svg';
@@ -14,15 +14,31 @@ function App() {
     parent.postMessage({ pluginMessage: { type: 'getLocalTextStyles' } }, '*');
   };
 
+  // Scan the users selection for text layers.
   const handleGetTextLayers = () => {
     // setIsLoading(true);
     parent.postMessage({ pluginMessage: { type: 'getSelectedTextLayers' } }, '*');
   };
 
-  // User has clicked a select all icon
+  // User has clicked a select all layers icon
   const handleSelectClick = (ids) => {
     parent.postMessage({ pluginMessage: { type: 'selectNodes', nodeArray: ids } }, '*');
   };
+
+  window.addEventListener("keydown", function(e) {
+    if (e.key === "Escape") {
+      // Close plugin when pressing Escape
+      window.parent.postMessage({ pluginMessage: { type: "close" } }, "*");
+    }
+  });
+
+  // Ref to track the current value of layersSelected
+  const layersSelectedRef = useRef(layersSelected);
+
+  // Update the ref every time layersSelected changes
+  React.useEffect(() => {
+    layersSelectedRef.current = layersSelected;
+  }, [layersSelected]);
 
   React.useEffect(() => {
     // Find the local text styles from Figma
@@ -35,13 +51,28 @@ function App() {
         setLocalTextStyles(event.data.pluginMessage.data);
       }
 
+      if (event.data.pluginMessage.type === 'noLayerSelected') {
+        setLayersSelected(false);
+        setIsLoading(false);
+      }
+
       // When we have all the text layers selected by the user
       // we can update our UI.
       if (event.data.pluginMessage.type === 'returnTextLayers') {
         setTextLayers(event.data.pluginMessage.data);
         console.log(event.data.pluginMessage.data);
         setLayersSelected(true);
+        console.log(layersSelected);
         setIsLoading(false);
+      }
+
+      if (event.data.pluginMessage.type === 'change') {
+        console.log(layersSelectedRef.current); // Use the ref's current value
+        if (!layersSelectedRef.current) {
+          handleGetTextLayers();
+        } else {
+          console.log('Layer is already selected');
+        }
       }
     };
   }, []);
@@ -50,7 +81,7 @@ function App() {
     <div className="wrapper">
       {isLoading ? (
         <p>Loading...</p>
-      ) : setLayersSelected ? (
+      ) : layersSelected ? (
         <React.Fragment>
           <div className="section-header">
           <h3 className="section-label">Selection Text</h3>
@@ -93,8 +124,8 @@ function App() {
         </React.Fragment>
       ) : (
         // Display the welcome screen if no layers are selected
-        <div className="welcome-screen">
-          <h3>Welcome to the Plugin!</h3>
+        <div className="initial-screen">
+          <p>You haven't selected any text layers yet.</p>
           <div className="secondary-button" onClick={handleGetTextLayers}>Get Text Layers</div>
         </div>
       )}

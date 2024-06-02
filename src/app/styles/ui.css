@@ -6,6 +6,10 @@
   font-size: 11px;
 }
 
+.initial-screen p {
+  padding: 16px;
+}
+
 .section-header {
   display: flex;
   flex-flow: row;
