@@ -2,6 +2,7 @@ figma.showUI(__html__, { width: 240, height: 400 });
 figma.skipInvisibleInstanceChildren = true;
 
 let localTextStyles = {};
+let selectAllUsed = false;
 
 figma.on("selectionchange", _event => {
   // When a change happens in the document
@@ -64,22 +65,75 @@ figma.ui.onmessage = async (msg) => {
         // Recursive function to check each node and its children for text layers
         async function checkNode(node) {
           if (node.type === "TEXT") {
-            textLayers.push({
-              id: node.id,
-              name: node.name,
-              text: node.characters,
-              fontFamily: node.fontName.family,
-              fontWeight: node.fontName.style,
-              fontSize: node.fontSize,
-              lineHeight: (node.lineHeight && node.lineHeight.value) || "Auto",
-              letterSpacing: node.letterSpacing,
-              paragraphSpacing: node.paragraphSpacing,
-              textAlign: node.textAlignHorizontal,
-              verticalAlign: node.textAlignVertical,
-              width: node.width,
-              height: node.height,
-              textStyleId: node.textStyleId
-            });
+
+            let fontWeight = node.fontWeight;
+            let fontSize = node.fontSize;
+            let fontName = node.fontName;
+
+            // Check if fontWeight is a symbol, which means it could
+            // be using multiple font weights
+            if (typeof fontWeight === 'symbol') {
+              fontWeight = "Mixed weights";
+            } else {
+              fontWeight = node.fontName.style;
+            }
+
+            // Check if fontWeight is a symbol, which means it could
+            // be using multiple font sizes
+            if (typeof fontSize === 'symbol') {
+              fontSize = "Mixed sizes";
+            } else {
+              fontSize = Math.floor(node.fontSize * 10) / 10;
+            }
+
+            // Check if fontWeight is a symbol which means
+            // it could be using multiple fonts in the same text layer.
+            if (typeof fontName === 'symbol') {
+              fontName = "Multiple fonts";
+            } else {
+              fontName = node.fontName.family;
+            }
+
+            // If the node is using a variable for the font family
+            // it will normally be undefined, so lets check
+            if (node.boundVariables && node.boundVariables.fontFamily) {
+              textLayers.push({
+                id: node.id,
+                name: node.name,
+                text: node.characters,
+                fontFamily: "Variable",
+                fontWeight: fontWeight,
+                fontSize: fontSize,
+                lineHeight: (node.lineHeight && node.lineHeight.value) || "Auto",
+                letterSpacing: node.letterSpacing,
+                paragraphSpacing: node.paragraphSpacing,
+                textAlign: node.textAlignHorizontal,
+                verticalAlign: node.textAlignVertical,
+                width: node.width,
+                height: node.height,
+                textStyleId: node.textStyleId,
+                boundVariables: node.boundVariables.fontFamily.map(v => v.id).join(', '),
+              });
+            } else {
+              textLayers.push({
+                id: node.id,
+                name: node.name,
+                text: node.characters,
+                fontFamily: fontName,
+                fontWeight: fontWeight,
+                fontSize: fontSize,
+                lineHeight: (node.lineHeight && node.lineHeight.value) || "Auto",
+                letterSpacing: node.letterSpacing,
+                paragraphSpacing: node.paragraphSpacing,
+                textAlign: node.textAlignHorizontal,
+                verticalAlign: node.textAlignVertical,
+                width: node.width,
+                height: node.height,
+                textStyleId: node.textStyleId,
+                boundVariables: undefined,
+              });
+            }
+
           } else if ("children" in node) {
             for (const child of node.children) {
               await checkNode(child);
@@ -94,7 +148,9 @@ figma.ui.onmessage = async (msg) => {
             yield;
           }
         }
-        return textLayers; // Return all collected text layers when done
+
+        // Return all collected text layers when done
+        return textLayers;
       }
 
       // Instantiate the async generator
@@ -106,30 +162,54 @@ figma.ui.onmessage = async (msg) => {
         let result;
         do {
           result = await generator.next();
-          allTextLayers.push(...result.value);
+          // Check if result.value is an array before pushing its contents
+          if (Array.isArray(result.value)) {
+            allTextLayers.push(...result.value);
+          }
         } while (!result.done);
 
-        groupAndSendData(allTextLayers); // Group and send data once processing is complete
+        groupAndSendData(allTextLayers);
       }
 
-      // Start processing
       await processTextLayers();
 
       // Format the line height depending if it's a percentage, pixels, or set to auto.
-      function formatLineHeight(lineHeight) {
+      // This is only used by styles.
+      function formatStyleLineHeight(lineHeight) {
+        console.log(lineHeight);
         if (lineHeight.unit === "AUTO") {
           return 'Auto';
         } else if (lineHeight.unit === 'PIXELS') {
-          return `${Math.floor(lineHeight.value * 10) / 10}`; // Ensure to append 'px' for clarity
+          return `${Math.floor(lineHeight.value * 10) / 10}`;
         } else if (lineHeight.unit === "PERCENT") {
-          return `${Math.floor(lineHeight.value)}`; // Remove decimals from percentage
+          return `${Math.round(lineHeight.value)}`;
         } else {
           return 'Auto';
         }
       }
 
+      // When we receive the lineheight from layers that don't have a style
+      // we just need to just do some basic formatting.
+      function formatLineHeightNumber(lineHeight) {
+        if (lineHeight === "Auto") {
+          return "Auto";
+        } else {
+          let formattedLineHeight = Math.round(lineHeight * 10) / 10;
+          console.log(formattedLineHeight);
+          return formattedLineHeight;
+        }
+      }
+
       // Group text layers by style and send to UI
       function groupAndSendData(textLayers) {
+
+        // Before we try and process all the text layers,
+        // make sure we have any text layers, the users selection
+        // could have just been frames, vectors, shapes etc.
+        if (textLayers.length === 0) {
+          figma.ui.postMessage({ type: 'noTextLayerFound' });
+          return
+        }
 
         const groupedByStyle = textLayers.reduce((acc, layer) => {
           let styleInfo;
@@ -145,19 +225,30 @@ figma.ui.onmessage = async (msg) => {
               styleInfo = {
                 fontFamily: matchedStyle.fontName,
                 fontWeight: matchedStyle.fontWeight,
-                fontSize: matchedStyle.fontSize, // Ensure these properties exist
-                lineHeight: formatLineHeight(matchedStyle.lineHeight),
+                fontSize: matchedStyle.fontSize,
+                lineHeight: formatStyleLineHeight(matchedStyle.lineHeight),
                 letterSpacing: matchedStyle.letterSpacing,
                 hasStyle: true, // Indicates that this layer is using a defined style
-                name: matchedStyle.name // Include the name of the style
+                hasVariable: false,
+                name: matchedStyle.name,
               };
             }
           }
 
           // If no textStyleId or no matched style, use other properties
           if (!styleInfo) {
-            styleKey = `${layer.fontFamily}-${layer.fontWeight}-${layer.fontSize}-${formatLineHeight(layer.lineHeight)}-${layer.letterSpacing}`;
-            styleInfo = { ...layer, hasStyle: false };
+            // The Style key is how we tell text layers apart.
+            // This is a long string of all their properties, so any text layers with a decimal difference in line height
+            // won't be considered the same.
+            styleKey = `${layer.fontFamily}-${layer.fontWeight}-${layer.fontSize}-${(layer.lineHeight)}-${layer.letterSpacing}-${layer.boundVariables}`;
+
+            // Style info is how we format the data to display in the UI.
+            styleInfo = {
+              ...layer,
+              lineHeight: formatLineHeightNumber(layer.lineHeight),
+              hasStyle: false,
+              hasVariable: !!layer.boundVariables, // Variable fonts will display differently in the UI.
+            };
           }
 
           // Initialize the group if it doesn't exist
@@ -197,7 +288,6 @@ figma.ui.onmessage = async (msg) => {
 
 
     } else {
-      figma.notify("Please select at least one layer.");
       figma.ui.postMessage({ type: 'noLayerSelected' });
     }
   }

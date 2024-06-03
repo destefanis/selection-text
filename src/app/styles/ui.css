@@ -51,6 +51,7 @@
 
 .list-item-content:hover {
   background-color: #f5f5f5;
+  cursor: default;
 }
 
 .list-item:hover .icons {
@@ -85,7 +86,6 @@
 
 
 .label {
-  /* Legacy/Pos – UI 11 */
   font-family: 'Inter';
   font-style: normal;
   font-weight: 400;
@@ -98,6 +98,20 @@
   text-overflow: ellipsis;
 }
 
+.variable-font {
+  padding: 2px;
+  background-color: rgb(245, 245, 245);
+  border-color: rgb(230, 230, 230);
+  border-radius: 4px;
+  border-width: 1px;
+  border-style: solid;
+  box-sizing: border-box;
+  height: 20px;
+  overflow: hidden;
+  padding: 0 3px;
+  margin-right: 2px;
+}
+
 .secondary {
   font-family: 'Inter';
   font-style: normal;
@@ -107,12 +121,16 @@
   letter-spacing: 0.005em;
   color: rgba(0, 0, 0, 0.5);
   white-space: nowrap;
-  /* padding-left: 4px; */
+}
+
+.style-dot {
+  padding-left: 3px;
+  padding-right: 3px;
 }
 
 .dot {
   padding-left: 3px;
-  padding-right: 3px;
+  padding-right: 0;
 }
 
 .style-indicator-wrapper {
@@ -122,22 +140,28 @@
   width: 16px;
   height: 16px;
   text-align: center;
-  /* white-space: nowrap; */
   padding-right: 8px;
 }
 
 .style-name {
-  /* Legacy/Pos – UI 11 */
   font-family: 'Inter';
   font-style: normal;
   font-weight: 400;
   font-size: 11px;
   line-height: 16px;
-  /* or 145% */
   display: flex;
   align-items: center;
   letter-spacing: 0.005em;
   color: rgba(0, 0, 0, 0.9);
+}
+
+.show-more {
+  color: rgba(0, 0, 0, 0.5);
+  padding-left: 6px;
+}
+
+.inline-icon {
+  padding-right: 8px;
 }
 
 .secondary-button {

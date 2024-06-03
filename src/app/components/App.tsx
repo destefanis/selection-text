@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import styleIcon from '../assets/style.svg';
 import selectIcon from '../assets/select.svg';
 import refreshIcon from '../assets/refresh.svg';
+import verticalMoreIcon from '../assets/vertical-more.svg';
 import '../styles/ui.css'
 
 function App() {
@@ -9,6 +10,14 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [textLayers, setTextLayers] = useState([]);
   const [localTextStyles, setLocalTextStyles] = useState([]);
+
+  const [showAllStyled, setShowAllStyled] = useState(false);
+
+  // Separate styled and unstyled layers
+  const styledLayers = textLayers.filter(layer => layer.style.hasStyle);
+  const unstyledLayers = textLayers.filter(layer => !layer.style.hasStyle);
+  const visibleStyledLayers = showAllStyled ? styledLayers : styledLayers.slice(0, 3);
+  const hiddenStyledCount = styledLayers.length - visibleStyledLayers.length;
 
   const getLocalTextStyles = () => {
     parent.postMessage({ pluginMessage: { type: 'getLocalTextStyles' } }, '*');
@@ -25,7 +34,7 @@ function App() {
     parent.postMessage({ pluginMessage: { type: 'selectNodes', nodeArray: ids } }, '*');
   };
 
-  window.addEventListener("keydown", function(e) {
+  window.addEventListener("keydown", function (e) {
     if (e.key === "Escape") {
       // Close plugin when pressing Escape
       window.parent.postMessage({ pluginMessage: { type: "close" } }, "*");
@@ -56,18 +65,19 @@ function App() {
         setIsLoading(false);
       }
 
+      if (event.data.pluginMessage.type === 'noTextLayerFound') {
+        setLayersSelected(false);
+      }
+
       // When we have all the text layers selected by the user
       // we can update our UI.
       if (event.data.pluginMessage.type === 'returnTextLayers') {
         setTextLayers(event.data.pluginMessage.data);
-        console.log(event.data.pluginMessage.data);
         setLayersSelected(true);
-        console.log(layersSelected);
         setIsLoading(false);
       }
 
       if (event.data.pluginMessage.type === 'change') {
-        console.log(layersSelectedRef.current); // Use the ref's current value
         if (!layersSelectedRef.current) {
           handleGetTextLayers();
         } else {
@@ -84,43 +94,55 @@ function App() {
       ) : layersSelected ? (
         <React.Fragment>
           <div className="section-header">
-          <h3 className="section-label">Selection Text</h3>
-          <img src={refreshIcon} alt="Refresh Icon" className="icon refresh-icon" onClick={() => handleGetTextLayers()}/>
+            <h3 className="section-label">Selection Text</h3>
+            <img src={refreshIcon} alt="Refresh Icon" className="icon refresh-icon" onClick={() => handleGetTextLayers()} />
           </div>
-          
+
           <ul className="list">
-            {textLayers.map(layer => (
+            {visibleStyledLayers.map(layer => (
               <li className="list-item" key={layer.style.id}>
-                {layer.style.hasStyle ? (
-                  <div className="list-item-content">
-                    <span className="style-indicator-wrapper">
-                      <span className="style-indicator" style={{ fontFamily: layer.style.fontFamily, fontWeight: layer.style.fontWeight, fontSize: Math.min(12, layer.style.fontSize) + 'px' }}>
-                        Ag
-                      </span>
+                <div className="list-item-content">
+                  <span className="style-indicator-wrapper">
+                    <span className="style-indicator" style={{ fontFamily: layer.style.fontFamily, fontWeight: layer.style.fontWeight, fontSize: Math.min(12, layer.style.fontSize) + 'px' }}>
+                      Ag
                     </span>
-                    
-                      <span className="label">{layer.style.name}</span><span className="secondary"><span className="dot">·</span>{layer.style.fontSize}/{layer.style.lineHeight}</span>
-                    
-                  </div>
-                ) : (
-                  <div className="list-item-content">
-                    <span className="label">{layer.style.fontFamily} {layer.style.fontWeight}</span><span className="secondary"><span className="dot">·</span> {layer.style.fontSize}/{layer.style.lineHeight}</span>
-                  </div>
-                )}
+                  </span>
+                  <span className="label">{layer.style.name}</span><span className="secondary"><span className="style-dot">·</span>{layer.style.fontSize}/{layer.style.lineHeight}</span>
+                </div>
                 <div className="icons">
-                  {layer.style.hasStyle ? (
-                    <img src={selectIcon} alt="Select Icon" className="icon" onClick={() => handleSelectClick(layer.ids)} />
-                  ) : (
-                    <>
-                      <img src={styleIcon} alt="Style Icon" className="icon" />
-                      <img src={selectIcon} alt="Select Icon" className="icon" onClick={() => handleSelectClick(layer.ids)} />
-                    </>
-                  )}
+                  <img src={selectIcon} alt="Select Icon" className="icon" onClick={() => handleSelectClick(layer.ids)} />
+                </div>
+              </li>
+            ))}
+            {hiddenStyledCount > 0 && !showAllStyled && (
+              <li className="list-item" onClick={() => setShowAllStyled(true)}>
+                <div className="list-item-content show-more">
+                <img src={verticalMoreIcon} alt="More Icon" className="inline-icon" />See all {hiddenStyledCount} text styles
+                </div>
+              </li>
+            )}
+            {unstyledLayers.map(layer => (
+              <li className="list-item" key={layer.style.id}>
+                <div className="list-item-content">
+                  <span className="label">
+                    {layer.style.hasVariable ? (
+                      <span className="variable-font">{layer.style.fontFamily}</span>
+                    ) : (
+                      layer.style.fontFamily
+                    )} {layer.style.fontWeight}
+                  </span>
+                  <span className="secondary">
+                    <span className="dot">·</span> {layer.style.fontSize}/{layer.style.lineHeight}
+                  </span>
+                </div>
+                <div className="icons">
+                  <img src={styleIcon} alt="Style Icon" className="icon" />
+                  <img src={selectIcon} alt="Select Icon" className="icon" onClick={() => handleSelectClick(layer.ids)} />
                 </div>
               </li>
             ))}
           </ul>
-          
+
         </React.Fragment>
       ) : (
         // Display the welcome screen if no layers are selected
