@@ -12,7 +12,12 @@ figma.on("selectionchange", _event => {
   });
 });
 
+
 figma.ui.onmessage = async (msg) => {
+
+  if (msg.type === 'resize') {
+    figma.ui.resize(msg.width, msg.height);
+  }
 
   // Called immediately by the App to fetch local styles.
   // That way we have them to reference later.
@@ -113,6 +118,12 @@ figma.ui.onmessage = async (msg) => {
                 height: node.height,
                 textStyleId: node.textStyleId,
                 boundVariables: node.boundVariables.fontFamily.map(v => v.id).join(', '),
+                textCase: node.textCase,
+                textDecoration: node.textDecoration,
+                hangingList: node.hangingList,
+                hangingPunctuation: node.hangingPunctuation,
+                paragraphIndent: node.paragraphIndent,
+                openTypeFeatures: typeof node.openTypeFeatures === 'object' && !Array.isArray(node.openTypeFeatures) && node.openTypeFeatures !== null ? node.openTypeFeatures : {},
               });
             } else {
               textLayers.push({
@@ -131,6 +142,13 @@ figma.ui.onmessage = async (msg) => {
                 height: node.height,
                 textStyleId: node.textStyleId,
                 boundVariables: undefined,
+                textCase: node.textCase,
+                textDecoration: node.textDecoration,
+                hangingList: node.hangingList,
+                hangingPunctuation: node.hangingPunctuation,
+                paragraphIndent: node.paragraphIndent,
+                // OpenType features can be symbol so we need to check for that
+                openTypeFeatures: typeof node.openTypeFeatures === 'object' && !Array.isArray(node.openTypeFeatures) && node.openTypeFeatures !== null ? node.openTypeFeatures : {},
               });
             }
 
@@ -176,7 +194,6 @@ figma.ui.onmessage = async (msg) => {
       // Format the line height depending if it's a percentage, pixels, or set to auto.
       // This is only used by styles.
       function formatStyleLineHeight(lineHeight) {
-        console.log(lineHeight);
         if (lineHeight.unit === "AUTO") {
           return 'Auto';
         } else if (lineHeight.unit === 'PIXELS') {
@@ -195,7 +212,6 @@ figma.ui.onmessage = async (msg) => {
           return "Auto";
         } else {
           let formattedLineHeight = Math.round(lineHeight * 10) / 10;
-          console.log(formattedLineHeight);
           return formattedLineHeight;
         }
       }
@@ -237,10 +253,22 @@ figma.ui.onmessage = async (msg) => {
 
           // If no textStyleId or no matched style, use other properties
           if (!styleInfo) {
+
+            let openTypeFeaturesKey = '';
+
+            // OpenType features are rare, like unique characters
+            // if any are enabled, we add that to the unique key.
+            if (layer.openTypeFeatures && Object.keys(layer.openTypeFeatures).length > 0) {
+              openTypeFeaturesKey = Object.entries(layer.openTypeFeatures)
+                .map(([feature, value]) => `${feature}-${value}`)
+                .join('-');
+            }
+
             // The Style key is how we tell text layers apart.
             // This is a long string of all their properties, so any text layers with a decimal difference in line height
             // won't be considered the same.
-            styleKey = `${layer.fontFamily}-${layer.fontWeight}-${layer.fontSize}-${(layer.lineHeight)}-${layer.letterSpacing}-${layer.boundVariables}`;
+            styleKey = `${layer.fontFamily}-${layer.fontWeight}-${layer.fontSize}-${layer.lineHeight}-${layer.letterSpacing}-${layer.paragraphSpacing}-${layer.textAlign}-${layer.verticalAlign}-${layer.textCase}-${layer.textDecoration}-${layer.hangingList}-${layer.hangingPunctuation}-${layer.paragraphIndent}-${openTypeFeaturesKey}`;            
+            // styleKey = `${layer.fontFamily}-${layer.fontWeight}-${layer.fontSize}-${(layer.lineHeight)}-${layer.letterSpacing}-${layer.boundVariables}`;
 
             // Style info is how we format the data to display in the UI.
             styleInfo = {
