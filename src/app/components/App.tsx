@@ -29,7 +29,14 @@ function App() {
   // Scan the users selection for text layers.
   const handleGetTextLayers = () => {
     // setIsLoading(true);
-    parent.postMessage({ pluginMessage: { type: 'getSelectedTextLayers' } }, '*');
+    parent.postMessage({ pluginMessage: { type: 'getSelectedTextLayers', button: "user" } }, '*');
+  };
+
+
+  // Scan the entire page for text layers.
+  const handleScanAllLayers = () => {
+    // setIsLoading(true);
+    parent.postMessage({ pluginMessage: { type: 'getSelectedTextLayers', button: "all" } }, '*');
   };
 
   // User has clicked a select all layers icon
@@ -85,11 +92,12 @@ function App() {
       }
 
       if (event.data.pluginMessage.type === 'change') {
-        if (!layersSelectedRef.current) {
+        // if (!layersSelectedRef.current) {
+        //   handleGetTextLayers();
+        // } else {
+        //   console.log('Layer is already selected');
+        // }
           handleGetTextLayers();
-        } else {
-          console.log('Layer is already selected');
-        }
       }
     };
   }, []);
@@ -183,11 +191,11 @@ function App() {
         <div className="initial-screen">
           <div className="initial-screen-content">
             <img className="plugin-icon" src={pluginIcon} />
-            <p>Select a text layer to get started.</p>
+            <p>Select a text layer to get started</p>
           </div>
           <div className="button-wrapper">
             <div className="secondary-button" onClick={handleGetTextLayers}>Get text layers</div>
-            <div className="secondary-button no-outline" onClick={handleGetTextLayers}>Scan entire page</div>
+            <div className="secondary-button no-outline" onClick={handleScanAllLayers}>Select entire page</div>
           </div>
         </div>
       )}

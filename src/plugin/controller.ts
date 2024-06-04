@@ -7,9 +7,11 @@ let selectAllUsed = false;
 figma.on("selectionchange", _event => {
   // When a change happens in the document
   // send a message to the plugin to look for changes.
-  figma.ui.postMessage({
-    type: "change"
-  });
+  if (selectAllUsed === false) {
+    figma.ui.postMessage({
+      type: "change"
+    });
+  }
 });
 
 
@@ -60,6 +62,12 @@ figma.ui.onmessage = async (msg) => {
   // When the user hits the button we run this
   // to get all the layers in a selection
   if (msg.type === 'getSelectedTextLayers') {
+    
+    if (msg.button === "all") {
+      const allNodes = figma.currentPage.findAll();
+      figma.currentPage.selection = allNodes;
+    }
+
     if (figma.currentPage.selection.length > 0) {
       const selection = figma.currentPage.selection;
 
@@ -267,7 +275,7 @@ figma.ui.onmessage = async (msg) => {
             // The Style key is how we tell text layers apart.
             // This is a long string of all their properties, so any text layers with a decimal difference in line height
             // won't be considered the same.
-            styleKey = `${layer.fontFamily}-${layer.fontWeight}-${layer.fontSize}-${layer.lineHeight}-${layer.letterSpacing}-${layer.paragraphSpacing}-${layer.textAlign}-${layer.verticalAlign}-${layer.textCase}-${layer.textDecoration}-${layer.hangingList}-${layer.hangingPunctuation}-${layer.paragraphIndent}-${openTypeFeaturesKey}`;            
+            styleKey = `${layer.fontFamily}-${layer.fontWeight}-${layer.fontSize}-${layer.lineHeight}-${layer.letterSpacing}-${layer.paragraphSpacing}-${layer.textAlign}-${layer.verticalAlign}-${layer.textCase}-${layer.textDecoration}-${layer.hangingList}-${layer.hangingPunctuation}-${layer.paragraphIndent}-${openTypeFeaturesKey}`;
             // styleKey = `${layer.fontFamily}-${layer.fontWeight}-${layer.fontSize}-${(layer.lineHeight)}-${layer.letterSpacing}-${layer.boundVariables}`;
 
             // Style info is how we format the data to display in the UI.
@@ -321,6 +329,10 @@ figma.ui.onmessage = async (msg) => {
   }
 
   if (msg.type === "selectNodes") {
+    // We don't want to trigger the "onSelectionChange" event at the top of this file
+    // as we may want to keep selecting variables from my original selection so we set it to True.
+    selectAllUsed = true;
+
     const layerArray = msg.nodeArray;
     let nodesToBeSelected = [];
 
@@ -332,5 +344,11 @@ figma.ui.onmessage = async (msg) => {
 
     // Select the nodes
     figma.currentPage.selection = nodesToBeSelected;
+
+    // After a brief pause we reset the variable in case the user
+    // starts selecting nodes again.
+    setTimeout(() => {
+      selectAllUsed = false;
+    }, 500);
   }
 };
