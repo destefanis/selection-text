@@ -83,6 +83,7 @@ figma.ui.onmessage = async (msg) => {
             let fontSize = node.fontSize;
             let fontName = node.fontName;
             let textStyleId = node.textStyleId;
+            let letterSpacing = node.letterSpacing;
 
             // Check if fontWeight is a symbol, which means it could
             // be using multiple font weights
@@ -114,6 +115,12 @@ figma.ui.onmessage = async (msg) => {
               textStyleId = node.textStyleId;
             }
 
+            if (typeof letterSpacing === 'symbol') {
+              letterSpacing = "Mixed";
+            } else {
+              letterSpacing = node.letterSpacing;
+            }
+
             // If the node is using a variable for the font family
             // it will normally be undefined, so lets check
             if (node.boundVariables && node.boundVariables.fontFamily) {
@@ -125,7 +132,7 @@ figma.ui.onmessage = async (msg) => {
                 fontWeight: fontWeight,
                 fontSize: fontSize,
                 lineHeight: (node.lineHeight && node.lineHeight.value) || "Auto",
-                letterSpacing: node.letterSpacing,
+                letterSpacing: letterSpacing,
                 paragraphSpacing: node.paragraphSpacing,
                 textAlign: node.textAlignHorizontal,
                 verticalAlign: node.textAlignVertical,
@@ -149,7 +156,7 @@ figma.ui.onmessage = async (msg) => {
                 fontWeight: fontWeight,
                 fontSize: fontSize,
                 lineHeight: (node.lineHeight && node.lineHeight.value) || "Auto",
-                letterSpacing: node.letterSpacing,
+                letterSpacing: letterSpacing,
                 paragraphSpacing: node.paragraphSpacing,
                 textAlign: node.textAlignHorizontal,
                 verticalAlign: node.textAlignVertical,
