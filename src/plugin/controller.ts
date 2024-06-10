@@ -84,16 +84,23 @@ figma.ui.onmessage = async (msg) => {
             let fontName = node.fontName;
             let textStyleId = node.textStyleId;
             let letterSpacing = node.letterSpacing;
+            let textDecoration = node.textDecoration;
+            let paragraphSpacing = node.paragraphSpacing;
+            let paragraphIndent = node.paragraphIndent;
 
             // Check if fontWeight is a symbol, which means it could
             // be using multiple font weights
             if (typeof fontWeight === 'symbol') {
               fontWeight = "mixed weights";
             } else {
-              fontWeight = node.fontName.style;
+              if (typeof node.fontName.style === 'symbol') {
+                fontWeight = node.fontWeight;
+              } else {
+                fontWeight = node.fontName.style;
+              } 
             }
 
-            // Check if fontWeight is a symbol, which means it could
+            // Check if fontSize is a symbol, which means it could
             // be using multiple font sizes
             if (typeof fontSize === 'symbol') {
               fontSize = "Mixed sizes";
@@ -110,7 +117,7 @@ figma.ui.onmessage = async (msg) => {
             }
 
             if (typeof textStyleId === 'symbol') {
-              textStyleId = "No Style";
+              textStyleId = "Multiple Styles";
             } else {
               textStyleId = node.textStyleId;
             }
@@ -119,6 +126,24 @@ figma.ui.onmessage = async (msg) => {
               letterSpacing = "Mixed";
             } else {
               letterSpacing = node.letterSpacing;
+            }
+
+            if (typeof textDecoration === 'symbol') {
+              textDecoration = "Mixed";
+            } else {
+              textDecoration = node.textDecoration;
+            }
+
+            if (typeof paragraphIndent === 'symbol') {
+              paragraphIndent = "Mixed";
+            } else {
+              paragraphIndent = node.paragraphIndent;
+            }
+
+            if (typeof paragraphSpacing === 'symbol') {
+              paragraphSpacing = "Mixed";
+            } else {
+              paragraphSpacing = node.paragraphSpacing;
             }
 
             // If the node is using a variable for the font family
@@ -133,7 +158,7 @@ figma.ui.onmessage = async (msg) => {
                 fontSize: fontSize,
                 lineHeight: (node.lineHeight && node.lineHeight.value) || "Auto",
                 letterSpacing: letterSpacing,
-                paragraphSpacing: node.paragraphSpacing,
+                paragraphSpacing: paragraphSpacing,
                 textAlign: node.textAlignHorizontal,
                 verticalAlign: node.textAlignVertical,
                 width: node.width,
@@ -141,10 +166,10 @@ figma.ui.onmessage = async (msg) => {
                 textStyleId: textStyleId,
                 boundVariables: node.boundVariables.fontFamily.map(v => v.id).join(', '),
                 textCase: node.textCase,
-                textDecoration: node.textDecoration,
+                textDecoration: textDecoration,
                 hangingList: node.hangingList,
                 hangingPunctuation: node.hangingPunctuation,
-                paragraphIndent: node.paragraphIndent,
+                paragraphIndent: paragraphIndent,
                 openTypeFeatures: typeof node.openTypeFeatures === 'object' && !Array.isArray(node.openTypeFeatures) && node.openTypeFeatures !== null ? node.openTypeFeatures : {},
               });
             } else {
@@ -157,7 +182,7 @@ figma.ui.onmessage = async (msg) => {
                 fontSize: fontSize,
                 lineHeight: (node.lineHeight && node.lineHeight.value) || "Auto",
                 letterSpacing: letterSpacing,
-                paragraphSpacing: node.paragraphSpacing,
+                paragraphSpacing: paragraphSpacing,
                 textAlign: node.textAlignHorizontal,
                 verticalAlign: node.textAlignVertical,
                 width: node.width,
@@ -165,10 +190,10 @@ figma.ui.onmessage = async (msg) => {
                 textStyleId: textStyleId,
                 boundVariables: undefined,
                 textCase: node.textCase,
-                textDecoration: node.textDecoration,
+                textDecoration: textDecoration,
                 hangingList: node.hangingList,
                 hangingPunctuation: node.hangingPunctuation,
-                paragraphIndent: node.paragraphIndent,
+                paragraphIndent: paragraphIndent,
                 // OpenType features can be symbol so we need to check for that
                 openTypeFeatures: typeof node.openTypeFeatures === 'object' && !Array.isArray(node.openTypeFeatures) && node.openTypeFeatures !== null ? node.openTypeFeatures : {},
               });
