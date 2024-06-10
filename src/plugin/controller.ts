@@ -82,11 +82,12 @@ figma.ui.onmessage = async (msg) => {
             let fontWeight = node.fontWeight;
             let fontSize = node.fontSize;
             let fontName = node.fontName;
+            let textStyleId = node.textStyleId;
 
             // Check if fontWeight is a symbol, which means it could
             // be using multiple font weights
             if (typeof fontWeight === 'symbol') {
-              fontWeight = "Mixed weights";
+              fontWeight = "mixed weights";
             } else {
               fontWeight = node.fontName.style;
             }
@@ -99,12 +100,18 @@ figma.ui.onmessage = async (msg) => {
               fontSize = Math.floor(node.fontSize * 10) / 10;
             }
 
-            // Check if fontWeight is a symbol which means
+            // Check if fontName is a symbol which means
             // it could be using multiple fonts in the same text layer.
             if (typeof fontName === 'symbol') {
               fontName = "Multiple fonts";
             } else {
               fontName = node.fontName.family;
+            }
+
+            if (typeof textStyleId === 'symbol') {
+              textStyleId = "No Style";
+            } else {
+              textStyleId = node.textStyleId;
             }
 
             // If the node is using a variable for the font family
@@ -124,7 +131,7 @@ figma.ui.onmessage = async (msg) => {
                 verticalAlign: node.textAlignVertical,
                 width: node.width,
                 height: node.height,
-                textStyleId: node.textStyleId,
+                textStyleId: textStyleId,
                 boundVariables: node.boundVariables.fontFamily.map(v => v.id).join(', '),
                 textCase: node.textCase,
                 textDecoration: node.textDecoration,
@@ -148,7 +155,7 @@ figma.ui.onmessage = async (msg) => {
                 verticalAlign: node.textAlignVertical,
                 width: node.width,
                 height: node.height,
-                textStyleId: node.textStyleId,
+                textStyleId: textStyleId,
                 boundVariables: undefined,
                 textCase: node.textCase,
                 textDecoration: node.textDecoration,
