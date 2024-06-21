@@ -33,6 +33,10 @@ function App() {
     parent.postMessage({ pluginMessage: { type: 'getLocalTextStyles' } }, '*');
   };
 
+  const getRemoteTextStyles = () => {
+    parent.postMessage({ pluginMessage: { type: 'getRemoteTextStyles' } }, '*');
+  };
+
   // Scan the users selection for text layers.
   const handleGetTextLayers = () => {
     parent.postMessage({ pluginMessage: { type: 'getSelectedTextLayers', button: "user" } }, '*');
@@ -101,22 +105,22 @@ function App() {
       case 'Most Common':
         sortedStyledLayers.sort((a, b) => b.count - a.count);
         sortedUnstyledLayers.sort((a, b) => b.count - a.count);
-        console.log(sortedUnstyledLayers);
+        // console.log(sortedUnstyledLayers);
         break;
       case 'Least Common':
         sortedStyledLayers.sort((a, b) => a.count - b.count);
         sortedUnstyledLayers.sort((a, b) => a.count - b.count);
-        console.log(sortedUnstyledLayers);
+        // console.log(sortedUnstyledLayers);
         break;
       case 'Largest Font Size':
         sortedStyledLayers.sort((a, b) => b.style.fontSize - a.style.fontSize);
         sortedUnstyledLayers.sort((a, b) => b.style.fontSize - a.style.fontSize);
-        console.log(sortedUnstyledLayers);
+        // console.log(sortedUnstyledLayers);
         break;
       case 'Smallest Font Size':
         sortedStyledLayers.sort((a, b) => a.style.fontSize - b.style.fontSize);
         sortedUnstyledLayers.sort((a, b) => a.style.fontSize - b.style.fontSize);
-        console.log(sortedUnstyledLayers);
+        // console.log(sortedUnstyledLayers);
         break;
       default:
         break;
@@ -129,6 +133,7 @@ function App() {
   React.useEffect(() => {
     // Find the local text styles from Figma
     getLocalTextStyles();
+    getRemoteTextStyles();
     handleGetTextLayers();
 
     window.onmessage = event => {

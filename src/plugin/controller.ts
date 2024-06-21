@@ -2,6 +2,7 @@ figma.showUI(__html__, { width: 240, height: 400 });
 figma.skipInvisibleInstanceChildren = true;
 
 let localTextStyles = {};
+let remoteTextStyles = [];
 let selectAllUsed = false;
 
 figma.on("selectionchange", _event => {
@@ -48,6 +49,7 @@ figma.ui.onmessage = async (msg) => {
       }));
 
       localTextStyles = detailedStyles;
+      // console.log("Local styles:", localTextStyles);
 
       figma.ui.postMessage({
         type: 'returnLocalTextStyles',
@@ -57,6 +59,61 @@ figma.ui.onmessage = async (msg) => {
 
     // Call the function to execute
     sendLocalTextStylesToUI();
+  }
+
+  if (msg.type === 'getRemoteTextStyles') {
+    // Scan all the text layers and get the styles.
+    async function fetchRemoteStyles(usedRemoteStyles) {
+      const currentPage = figma.currentPage;
+
+      // Find all text nodes in the current page
+      const nodes = currentPage.findAllWithCriteria({
+        types: ["TEXT"]
+      }).filter(node => {
+        // Check for remote styles
+        return (
+          (node.type === "TEXT" && node.textStyleId)
+        );
+      });
+
+      for (const node of nodes) {
+        const styleId = node.textStyleId;
+        if (typeof styleId !== "symbol") {
+          // Check if the text style with the given styleId already exists in the usedRemoteStyles.text array
+          const existingStyle = usedRemoteStyles.find(
+            style => style.id === styleId
+          );
+
+          if (existingStyle) {
+            // If the text style exists we don't need a duplicate
+            return
+          } else {
+            // If the text style does not exist, create a new style object and push it to the usedRemoteStyles.text array
+            const style = figma.getStyleById(styleId);
+
+            usedRemoteStyles.push({
+              id: style.id,
+              name: style.name,
+              fontFamily: style.fontName.family,
+              fontWeight: style.fontName.style,
+              description: style.description || "No description", // Handle potentially undefined properties
+              fontSize: style.fontSize || "Variable", // Handle cases where fontSize might not be uniformly set
+              lineHeight: style.lineHeight,
+              letterSpacing: style.letterSpacing ? (style.letterSpacing.unit === 'PIXELS' ? style.letterSpacing.value : style.letterSpacing.unit) : 'NORMAL',
+              paragraphSpacing: style.paragraphSpacing || 0,
+              textCase: style.textCase || 'ORIGINAL',
+              textDecoration: style.textDecoration || 'NONE',
+              textAlignHorizontal: style.textAlignHorizontal || 'LEFT',
+              textAlignVertical: style.textAlignVertical || 'TOP',
+            });
+          }
+        }
+      }
+
+      // console.log("Remote styles:", usedRemoteStyles);
+    }
+
+    fetchRemoteStyles(remoteTextStyles);
   }
 
   // When the user hits the button we run this
@@ -295,6 +352,24 @@ figma.ui.onmessage = async (msg) => {
                 hasVariable: false,
                 name: matchedStyle.name,
               };
+            }
+
+            if (!matchedStyle) {
+              const remoteStyle = remoteTextStyles.find(style => style.id === layer.textStyleId);
+
+              if (remoteStyle) {
+                styleKey = layer.textStyleId;
+                styleInfo = {
+                  fontFamily: remoteStyle.fontName,
+                  fontWeight: remoteStyle.fontWeight,
+                  fontSize: remoteStyle.fontSize,
+                  lineHeight: formatStyleLineHeight(remoteStyle.lineHeight),
+                  letterSpacing: remoteStyle.letterSpacing,
+                  hasStyle: true, // Indicates that this layer is using a defined style
+                  hasVariable: false,
+                  name: remoteStyle.name,
+                };
+              }
             }
           }
 
